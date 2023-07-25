@@ -25,6 +25,13 @@ public interface TypeTransformer {
       ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName);
 
   /**
+   * Apply the advice class named {@code adviceClassName} to the instrumented type methods that
+   * match {@code methodMatcher}. The advice is applied via invokedynamic instead of inlining.
+   */
+  void applyIndyAdviceToMethod(
+      ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName);
+
+  /**
    * Apply a custom ByteBuddy {@link AgentBuilder.Transformer} to the instrumented type. Note that
    * since this is a completely custom transformer, muzzle won't be able to scan for references or
    * helper classes.

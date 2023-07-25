@@ -135,4 +135,37 @@ public abstract class InstrumentationModule implements Ordered {
   public List<String> getAdditionalHelperClassNames() {
     return Collections.emptyList();
   }
+
+  /**
+   * Global state classes are injected into the agent classloader instead of the indy-instrumentaiton-module classloader.
+   * Those classes can be used for sharing state across instrumentation modules but do not have access to the instrumented classes.
+   *
+   * @param className The name of the class that may or may not be a global state class.
+   */
+  public boolean isGlobalStateClass(String className) {
+    return false;
+  }
+
+  /**
+   * Even though types might be public, they might not be accessible due to java 9 module encapsulation.
+   * Such modules can be "opened" for full access to the indy-instrumentaiton-module.
+   *
+   * This can be done by providing the name of a class from each module to open via this method.
+   * The agent will then take care of opening those modules (looked up via the providec classes) to the
+   * instrumentation module classloader.
+   *
+   * @return the names of classes whose container modules will be opened to this instrumentation.
+   */
+  public List<String> getModulesToOpen() {
+    return Collections.emptyList();
+  }
+
+  //TODO:
+  // maybe we have to add corresponding getAdditionalHelperClassNames() and isHelperClass() methods in order
+  // to add classes to the set of classes to be loaded by the indy-instrumentationmodule-classloader
+  // I would suggest to start without them and see if the need arises
+  // normally the behaviour should be:
+  // - class is compile-only dependency (e.g. otel extension API or servlet-api) -> Not part of indy-instrumentationmodule-classloader
+  // - class is runtime dependency (e.g. the instrumentaiton uses guava as helper) -> should be loaded in indy-instrumentationmodule-classloader
+
 }
