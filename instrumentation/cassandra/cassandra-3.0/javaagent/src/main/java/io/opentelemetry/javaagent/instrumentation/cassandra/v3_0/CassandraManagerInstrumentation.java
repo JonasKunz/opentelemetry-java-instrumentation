@@ -27,7 +27,7 @@ public class CassandraManagerInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
+    transformer.applyIndyAdviceToMethod(
         isMethod().and(isPrivate()).and(named("newSession")).and(takesArguments(0)),
         this.getClass().getName() + "$NewSessionAdvice");
   }
@@ -42,13 +42,14 @@ public class CassandraManagerInstrumentation implements TypeInstrumentation {
      *
      * @param session The fresh session to patch. This session is replaced with new session
      */
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void injectTracingSession(@Advice.Return(readOnly = false) Session session) {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.AssignReturned.ToReturned
+    public static Session injectTracingSession(@Advice.Return Session session) {
       // This should cover ours and OT's TracingSession
       if (session.getClass().getName().endsWith("cassandra.TracingSession")) {
-        return;
+        return session;
       }
-      session = new TracingSession(session);
+      return new TracingSession(session);
     }
   }
 }
