@@ -96,6 +96,8 @@ public class RestClientInstrumentation implements TypeInstrumentation {
       Context context = (Context) enter[1];
       Scope scope = (Scope) enter[2];
 
+      scope.close();
+
       instrumenter().end(context, otelRequest, response, throwable);
     }
   }

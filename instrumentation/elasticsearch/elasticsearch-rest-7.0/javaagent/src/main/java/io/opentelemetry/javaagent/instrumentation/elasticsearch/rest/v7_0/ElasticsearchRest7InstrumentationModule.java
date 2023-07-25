@@ -30,4 +30,15 @@ public class ElasticsearchRest7InstrumentationModule extends InstrumentationModu
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new RestClientInstrumentation());
   }
+
+  @Override
+  public boolean isGlobalStateClass(String className) {
+    // We mark ElasticsearchEndpointMap as a global state class
+    // this means that this class will not be copied by each instrumentation module classloader instance,
+    // but will be placed in a shared parent classloader.
+    // This is just done as an example, it would bee fine to copy ElasticsearchEndpointMap everytime, except for the unnecessary memory consumption.
+    // Muzzle should take care that all classes references by GlobalState-classes are also marked as global state
+    // (e.g. ElasticsearchEndpointDefinition in this case).
+    return "io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient.ElasticsearchEndpointMap".equals(className);
+  }
 }
