@@ -100,6 +100,10 @@ public abstract class InstrumentationModule implements Ordered {
     return false;
   }
 
+  public boolean isIndyModule() {
+    return false;
+  }
+
   /** Register resource names to inject into the user's class loader. */
   public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {}
 
