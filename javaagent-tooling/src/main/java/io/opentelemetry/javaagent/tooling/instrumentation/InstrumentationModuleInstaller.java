@@ -20,6 +20,7 @@ import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyBootstrap;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyTypeTransformerImpl;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.PatchBytecodeVersionTo51Transformer;
@@ -57,6 +58,7 @@ public final class InstrumentationModuleInstaller {
 
   public InstrumentationModuleInstaller(Instrumentation instrumentation) {
     this.instrumentation = instrumentation;
+    IndyBootstrap.init(indyModuleRegistry);
   }
 
   AgentBuilder install(

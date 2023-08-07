@@ -6,19 +6,12 @@
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.tooling.Utils;
-import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.asm.TypeConstantAdjustment;
 import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.implementation.bytecode.StackManipulation;
 import net.bytebuddy.implementation.bytecode.member.MethodInvocation;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.utility.JavaModule;
-import java.security.ProtectionDomain;
 
 public final class IndyTypeTransformerImpl implements TypeTransformer {
   private AgentBuilder.Identified.Extendable agentBuilder;

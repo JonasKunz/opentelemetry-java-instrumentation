@@ -64,7 +64,7 @@ public class PatchBytecodeVersionTo51Transformer implements AgentBuilder.Transfo
 
           @Override
           public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
-            final MethodVisitor methodVisitor = super.visitMethod(access, name, descriptor, signature, exceptions);
+            MethodVisitor methodVisitor = super.visitMethod(access, name, descriptor, signature, exceptions);
             if (patchVersion) {
               return new JSRInlinerAdapter(methodVisitor, access, name, descriptor, signature, exceptions);
             } else {

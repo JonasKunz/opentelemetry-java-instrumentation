@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class CassandraManagerInstrumentation implements TypeInstrumentation {
@@ -42,13 +43,14 @@ public class CassandraManagerInstrumentation implements TypeInstrumentation {
      *
      * @param session The fresh session to patch. This session is replaced with new session
      */
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void injectTracingSession(@Advice.Return(readOnly = false) Session session) {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.AssignReturned.ToReturned(typing = Assigner.Typing.DYNAMIC)
+    public static Object injectTracingSession(@Advice.Return Session session) {
       // This should cover ours and OT's TracingSession
       if (session.getClass().getName().endsWith("cassandra.TracingSession")) {
-        return;
+        return session;
       }
-      session = new TracingSession(session);
+      return new TracingSession(session);
     }
   }
 }

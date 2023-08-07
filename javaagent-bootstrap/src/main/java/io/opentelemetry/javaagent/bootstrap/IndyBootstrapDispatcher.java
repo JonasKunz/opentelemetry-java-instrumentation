@@ -16,11 +16,13 @@ public class IndyBootstrapDispatcher {
 
   private static final MethodHandle VOID_NOOP;
 
+  private IndyBootstrapDispatcher() {}
+
   static {
     try {
       VOID_NOOP = MethodHandles.publicLookup().findStatic(IndyBootstrapDispatcher.class, "voidNoop", MethodType.methodType(void.class));
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
   }
 
