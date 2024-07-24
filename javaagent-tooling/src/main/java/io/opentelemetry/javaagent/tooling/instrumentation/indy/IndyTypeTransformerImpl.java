@@ -28,9 +28,16 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
       AgentBuilder.Identified.Extendable agentBuilder, InstrumentationModule module) {
     this.agentBuilder = agentBuilder;
     this.instrumentationModule = module;
+    Advice.PostProcessor.Factory delegateFactory = new Advice.AssignReturned.Factory().withSuppressed(
+        Throwable.class);
     this.adviceMapping =
         Advice.withCustomMapping()
-            .with(new Advice.AssignReturned.Factory().withSuppressed(Throwable.class))
+            .with(new Advice.PostProcessor.Factory() {
+              @Override
+              public Advice.PostProcessor make(MethodDescription.InDefinedShape method, boolean exit) {
+                return delegateFactory.make(IndyBootstrap.eraseTypes(method), exit);
+              }
+            })
             .bootstrap(
                 IndyBootstrap.getIndyBootstrapMethod(),
                 IndyBootstrap.getAdviceBootstrapArguments(instrumentationModule));
@@ -104,7 +111,7 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
       } else {
         result = bytes;
       }
-      result = AdviceSignatureEraser.transform(result);
+      //result = AdviceSignatureEraser.transform(result);
       return result;
     }
   }

@@ -70,6 +70,7 @@ tasks {
     }
     // this is needed for AgentInstrumentationSpecificationTest
     jvmArgs("-Dotel.javaagent.exclude-classes=config.exclude.packagename.*,config.exclude.SomeClass,config.exclude.SomeClass\$NestedClass")
+    jvmArgs("-Dnet.bytebuddy.dump=/Users/jonas/git/otel/opentelemetry-java-instrumentation/testing-common/integration-tests/dump")
   }
 
   check {

@@ -16,13 +16,19 @@ import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.method.ParameterDescription;
+import net.bytebuddy.description.method.ParameterList;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.utility.JavaConstant;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * We instruct Byte Buddy (via {@link Advice.WithCustomMapping#bootstrap(java.lang.reflect.Method)})
@@ -202,22 +208,59 @@ public class IndyBootstrap {
   static Advice.BootstrapArgumentResolver.Factory getAdviceBootstrapArguments(
       InstrumentationModule instrumentationModule) {
     String moduleName = instrumentationModule.getClass().getName();
-    return (adviceMethod, exit) ->
-        (instrumentedType, instrumentedMethod) ->
+    return new Advice.BootstrapArgumentResolver.Factory() {
+      @Override
+      public Advice.BootstrapArgumentResolver resolve(MethodDescription.InDefinedShape adviceMethod, boolean isExit) {
+        return (instrumentedType, instrumentedMethod) ->
             Arrays.asList(
                 JavaConstant.Simple.ofLoaded(BOOTSTRAP_KIND_ADVICE),
                 JavaConstant.Simple.ofLoaded(moduleName),
-                JavaConstant.Simple.ofLoaded(getOriginalSignature(adviceMethod)),
+                JavaConstant.Simple.ofLoaded(adviceMethod.getDescriptor()),
                 JavaConstant.Simple.ofLoaded(adviceMethod.getDeclaringType().getName()));
+      }
+
+      @Override
+      public MethodDescription.InDefinedShape override(MethodDescription.InDefinedShape original) {
+        return eraseTypes(original);
+      }
+    };
   }
 
-  private static String getOriginalSignature(MethodDescription.InDefinedShape adviceMethod) {
-    for (AnnotationDescription an : adviceMethod.getDeclaredAnnotations()) {
-      if (OriginalDescriptor.class.getName().equals(an.getAnnotationType().getName())) {
-        return (String) an.getValue("value").resolve();
-      }
+  @NotNull
+  static MethodDescription.Latent eraseTypes(MethodDescription.InDefinedShape original) {
+    ParameterList<ParameterDescription.InDefinedShape> parameters = original.getParameters();
+    return new MethodDescription.Latent(
+        original.getDeclaringType(),
+        original.getInternalName(),
+        original.getModifiers(),
+        original.getTypeVariables().asTokenList(ElementMatchers.any()),
+        eraseType(original.getReturnType()),
+        eraseTypes(parameters),
+        original.getExceptionTypes(),
+        original.getDeclaredAnnotations(),
+        original.getDefaultValue(),
+        original.getReceiverType());
+  }
+
+  private static List<? extends ParameterDescription.Token> eraseTypes(List<? extends ParameterDescription> tokenList) {
+    return tokenList.stream()
+        .map(param -> new ParameterDescription.Token(eraseType(param.getType()), param.getDeclaredAnnotations(), param.getName(), param.getModifiers()))
+        .collect(Collectors.toList());
+  }
+
+  private static TypeDescription.Generic eraseType(TypeDescription.Generic type) {
+    if (type.asErasure().isPrimitive()) {
+      return type;
     }
-    throw new IllegalStateException("OriginalSignature annotation is not present!");
+    if (type.isArray()) {
+      //TODO: Erase array component types
+      return type;
+    }
+    String name = type.asErasure().getName();
+    if (name.startsWith("java.")) {
+      return type;
+    }
+    return TypeDescription.ForLoadedType.of(Object.class).asGenericType();
   }
 
   private static ConstantCallSite bootstrapProxyMethod(
